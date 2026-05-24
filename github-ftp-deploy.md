@@ -91,8 +91,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Force IPv4
-        run: sudo sh -c 'echo "precedence ::ffff:0:0/96 100" >> /etc/gai.conf'
+      - name: Disable IPv6
+        run: |
+          sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+          sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
 
       - name: Deploy to FTP server
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
@@ -154,7 +156,7 @@ After pushing, monitor the Actions tab. Common errors and their fixes:
 |---|---|
 | `unable to find version` | The tag format is wrong — it must be exactly `@v4.4.0` (with `v`) |
 | `ECONNRESET` on data socket (control) | Change `protocol: ftp` to `protocol: ftps` — never use plain `ftp` |
-| `ECONNRESET` on data socket (upload) | The runner is using EPSV (IPv6) for the data channel even over FTPS. Add a **Force IPv4** step before the deploy step (see template above). |
+| `ECONNRESET` on data socket (upload) | The runner uses EPSV (IPv6) for the data channel even over FTPS. Add the **Disable IPv6** step before the deploy step (see template above). Modifying `/etc/gai.conf` does NOT fix this. |
 | `Login incorrect` | A secret value is wrong — double-check FTP_USERNAME and FTP_PASSWORD |
 | `550 Permission denied` | FTP user lacks write access to `server-dir` — adjust the path |
 | `No files uploaded` | Check `local-dir` and `exclude` patterns |
@@ -166,11 +168,14 @@ After pushing, monitor the Actions tab. Common errors and their fixes:
 1. **Always use `protocol: ftps`**, never `protocol: ftp`.
    Plain FTP causes `ECONNRESET` on the data socket when the runner connects via IPv6.
 
-2. **Always include the Force IPv4 step** before the deploy step.
-   Even with `protocol: ftps`, the underlying library defaults to EPSV (IPv6 passive mode) for data connections. Kasserver (and similar hosts) drop IPv6 data sockets with ECONNRESET. The step below forces the runner to prefer IPv4:
+2. **Always include the Disable IPv6 step** before the deploy step.
+   Even with `protocol: ftps`, the underlying `basic-ftp` library sets passive mode based on the control socket's address family. Node.js connects to IPv4 addresses via IPv4-mapped IPv6 sockets (`::ffff:x.x.x.x`), so `socket.remoteFamily` returns `'IPv6'` and the library picks EPSV. Kasserver drops IPv6 data connections with ECONNRESET. Disabling IPv6 at the kernel level forces pure IPv4 sockets, so `basic-ftp` uses PASV instead.
+   **Note:** modifying `/etc/gai.conf` does NOT fix this — it only affects DNS resolution, not the socket address family.
    ```yaml
-   - name: Force IPv4
-     run: sudo sh -c 'echo "precedence ::ffff:0:0/96 100" >> /etc/gai.conf'
+   - name: Disable IPv6
+     run: |
+       sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+       sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
    ```
 
 3. **Use exactly `@v4.4.0`** — this is the verified working version. Do not look up the
