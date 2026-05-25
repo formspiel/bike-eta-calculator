@@ -11,11 +11,11 @@ A mobile-first web app for calculating estimated arrival time on a bike ride. En
 - Comparison table: ETA at your current speed and ±3 steps of 0.3 km/h, with one tap to adopt any row's speed
 - Pre-written summary text with ascent and stop details, shareable via the native OS share sheet (Messages, WhatsApp, etc.) or copy button on desktop
 - Settings card to adjust the climbing penalty (default: 9 min per 100 m), saved between sessions
-- German and English UI, with comma or period as decimal separator
+- German and English UI, auto-detected from browser/OS language, switchable manually; comma or period as decimal separator
 - Dark and light mode, follows OS setting
 - Responds to the OS text size setting (Dynamic Type on iOS, browser font size on Android)
 - Fully accessible (WCAG 2.2 AA)
-- Works offline after first load
+- Works offline after first load, reliably — a service worker caches the app so it loads even after force-quitting in flight mode
 
 ## Usage
 

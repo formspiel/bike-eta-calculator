@@ -195,3 +195,30 @@ After pushing, monitor the Actions tab. Common errors and their fixes:
    - name: Minify
      run: npx html-minifier-terser --collapse-whitespace --remove-comments --minify-css true --minify-js true index.html -o index.html
    ```
+
+6. **Version stamping and `fetch-depth`.**
+   To inject a human-readable build number into the deployed HTML, replace a placeholder (e.g. `__VERSION__`) in a CI step:
+   ```yaml
+   - name: Checkout repository
+     uses: actions/checkout@v4
+     with:
+       fetch-depth: 0        # required for git rev-list --count to work
+
+   - name: Stamp version
+     run: |
+       VERSION="v1.$(git rev-list --count HEAD) ($(git rev-parse --short HEAD))"
+       sed -i "s/__VERSION__/$VERSION/" index.html
+   ```
+   **`fetch-depth: 0` is required** — without it `actions/checkout` does a shallow clone and `git rev-list --count HEAD` always returns `1`.
+
+   **For large repositories** where fetching the full history is too slow, use the GitHub Actions run number instead — no git history needed:
+   ```yaml
+   - name: Checkout repository
+     uses: actions/checkout@v4   # shallow clone is fine here
+
+   - name: Stamp version
+     run: |
+       VERSION="v1.${{ github.run_number }} ($(git rev-parse --short HEAD))"
+       sed -i "s/__VERSION__/$VERSION/" index.html
+   ```
+   `github.run_number` is a sequential counter maintained by GitHub that increments with every workflow run. `git rev-parse --short HEAD` only needs the current commit and works with a shallow clone.
