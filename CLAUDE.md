@@ -10,9 +10,11 @@ Mobile-first web app for calculating cycling ETA. The user enters speed and rema
 
 No build step, no dependencies, no package manager. Open `index.html` directly in a browser (`file://` works) or serve with any static host. There are no tests, no lint commands, and no compile step.
 
-**CI pipeline (on push to `main`):** checks out the full git history (`fetch-depth: 0`), stamps `__VERSION__` placeholder with `v1.{commit-count} ({short-hash})`, minifies `index.html` with `html-minifier-terser` (~27% size reduction), then deploys via FTPS. The source file in git is never minified; minification only happens during deployment.
+**CI pipeline (on push to `main`):** checks out the full git history (`fetch-depth: 0`), stamps `__VERSION__` placeholder with `v1.{commit-count} ({short-hash})`, minifies `index.html` with `html-minifier-terser` (~27% size reduction), then deploys `index.html` and `sw.js` via FTPS using `curl`.
 
-**Note on `fetch-depth: 0`:** required so `git rev-list --count HEAD` returns the real commit count. Without it, `actions/checkout` does a shallow clone and the counter is always `1`. For large repos where full history is too slow, use `${{ github.run_number }}` instead — see `github-ftp-deploy.md`.
+**Deployment detail:** `curl --ssl-reqd --disable-epsv` uploads each file directly to the FTP server. `--ssl-reqd` requires FTPS (no plain-FTP fallback). `--disable-epsv` forces PASV mode instead of EPSV — required because kasserver drops IPv6 data connections. No third-party action is needed; `curl` is pre-installed on all GitHub Actions runners.
+
+**Note on `fetch-depth: 0`:** required so `git rev-list --count HEAD` returns the real commit count. Without it, `actions/checkout` does a shallow clone and the counter is always `1`. For large repos where full history is too slow, use `${{ github.run_number }}` instead — it is a sequential counter maintained by GitHub and works with a shallow clone.
 
 ## Hard constraints
 
