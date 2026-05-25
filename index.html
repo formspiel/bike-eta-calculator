@@ -333,7 +333,7 @@
     },
     de: {
       title: 'Ankunftszeit', journey: 'Fahrt', speed: 'Ø Geschw.',
-      distance: 'Verbleibende km', ascent: 'Anstieg', stopTime: 'Geplanter Stopp',
+      distance: 'Verbleibende km', ascent: 'Restanstieg', stopTime: 'Geplanter Stopp',
       eta: 'Ankunft', etaBySpeed: 'Ankunft nach Tempo',
       thSpeed: 'Tempo (km/h)', thEta: 'Ankunft', thDur: 'Fahrzeit', thUse: 'Verwenden',
       empty: 'ℹ︎ <span class="empty-text">Tempo und Distanz eingeben</span>',
@@ -448,7 +448,7 @@
 
   function dur(hours) {
     var m = Math.round(hours * 60), h = Math.floor(m / 60);
-    return h ? h + 'h ' + pad(m % 60) + 'm' : m + ' min';
+    return h ? h + 'h ' + pad(m % 60) + 'm' : m + ' min';
   }
 
   function setSummary(spd, km, asc, stop, arr) {
