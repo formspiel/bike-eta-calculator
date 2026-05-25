@@ -263,6 +263,16 @@
     color: var(--text-sec);
     margin-top: 0.5rem;
   }
+
+  footer {
+    max-width: 36rem;
+    margin-inline: auto;
+    padding: 0.625rem 1rem 1.25rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: var(--fs-caption);
+    color: var(--text-sec);
+  }
 </style>
 </head>
 <body>
@@ -346,9 +356,12 @@
       <span class="unit" aria-hidden="true">min</span>
     </div>
     <p class="settings-note" data-i18n="penaltyNote">Added to ETA for every 100 m of ascent. Default: 9 min.</p>
-    <p class="settings-note" id="app-version">__VERSION__</p>
   </div>
 </main>
+
+<footer>
+  <p id="app-version">Made by @formspiel with ♡ and Claude • __VERSION__</p>
+</footer>
 
 <div id="drag-tooltip" aria-hidden="true"></div>
 
@@ -513,8 +526,8 @@
       tooltipEl.style.left = '-9999px';
       tooltipEl.style.display = 'block';
       var tw = tooltipEl.offsetWidth;
-      tooltipLeft = touchX - tw - 24;
-      if (tooltipLeft < 8) tooltipLeft = touchX + 24;
+      tooltipLeft = touchX - tw - 34;
+      if (tooltipLeft < 8) tooltipLeft = touchX + 34;
     }
     tooltipEl.style.left    = tooltipLeft + 'px';
     tooltipEl.style.top     = (touchY - tooltipEl.offsetHeight / 2) + 'px';
