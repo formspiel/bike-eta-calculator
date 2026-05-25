@@ -4,13 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-Single-file, offline-capable, mobile-first web app for calculating cycling/driving ETA. The user enters speed and remaining distance; the app shows arrival time, a 7-row comparison table at ±0.3 km/h steps, and a shareable text summary. Everything lives in `index.html` — HTML, CSS, and JS in one file.
+Mobile-first web app for calculating cycling ETA. The user enters speed and remaining distance; the app shows arrival time, a 7-row comparison table at ±0.3 km/h steps, and a shareable text summary. Two files: `index.html` (HTML, CSS, JS) and `sw.js` (service worker for offline use).
 
 ## Development
 
 No build step, no dependencies, no package manager. Open `index.html` directly in a browser (`file://` works) or serve with any static host. There are no tests, no lint commands, and no compile step.
 
-**CI pipeline (on push to `main`):** stamps `__VERSION__` placeholder with `v1.{commit-count} ({short-hash})`, minifies `index.html` with `html-minifier-terser` (~27% size reduction), then deploys via FTPS. The source file in git is never minified; minification only happens during deployment.
+**CI pipeline (on push to `main`):** checks out the full git history (`fetch-depth: 0`), stamps `__VERSION__` placeholder with `v1.{commit-count} ({short-hash})`, minifies `index.html` with `html-minifier-terser` (~27% size reduction), then deploys via FTPS. The source file in git is never minified; minification only happens during deployment.
+
+**Note on `fetch-depth: 0`:** required so `git rev-list --count HEAD` returns the real commit count. Without it, `actions/checkout` does a shallow clone and the counter is always `1`. For large repos where full history is too slow, use `${{ github.run_number }}` instead — see `github-ftp-deploy.md`.
 
 ## Hard constraints
 
@@ -22,7 +24,7 @@ No build step, no dependencies, no package manager. Open `index.html` directly i
 
 ## Architecture
 
-The entire app is `index.html` (~450 lines): CSS custom properties → HTML structure → vanilla JS. No module system, no bundler.
+Two files: `index.html` (~550 lines, CSS custom properties → HTML structure → vanilla JS) and `sw.js` (35 lines, service worker). No module system, no bundler.
 
 ### Key tech decisions
 
@@ -39,6 +41,12 @@ The entire app is `index.html` (~450 lines): CSS custom properties → HTML stru
 **Dark mode** — Entirely CSS via `@media (prefers-color-scheme: dark)`. No JS.
 
 **Safe area** — `env(safe-area-inset-*)` on `body` padding for iOS notch/home bar.
+
+**Language detection** — `var lang` is initialised from `navigator.language` on startup: `startsWith('de')` → `'de'`, anything else → `'en'`. User can override with the button. `applyLang()` also sets `document.documentElement.lang` so screen readers and the browser use the correct language.
+
+**Desktop layout** — `header, main { max-width: 36rem; margin-inline: auto; }` centres the single-column layout on wide viewports without a wrapper element.
+
+**Service worker (`sw.js`)** — network-first strategy: tries the network on every request, updates the cache on success, falls back to cache when offline. Cache name `eta-v1`; change to `eta-v2` etc. to force a full cache bust if needed. Does not register on `file://` URLs, so local development is unaffected.
 
 ### Key CSS classes
 
@@ -57,7 +65,7 @@ The entire app is `index.html` (~450 lines): CSS custom properties → HTML stru
 
 | Function | Purpose |
 |---|---|
-| `applyLang()` | Applies current `lang` to all `[data-i18n]` elements and aria-labels |
+| `applyLang()` | Sets `document.documentElement.lang`, updates all `[data-i18n]` elements and aria-labels |
 | `update()` | Main recalculation: reads inputs, updates ETA, table, summary |
 | `setSummary(spd, km)` | Writes summary text, shows share/copy buttons |
 | `arrival(spd, km)` | Returns `Date` of arrival |
