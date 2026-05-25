@@ -360,7 +360,7 @@
     }
   };
 
-  var lang = 'en';
+  var lang = (navigator.language || '').toLowerCase().startsWith('de') ? 'de' : 'en';
 
   function s(key) { return S[lang][key]; }
 
