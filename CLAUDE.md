@@ -10,6 +10,8 @@ Single-file, offline-capable, mobile-first web app for calculating cycling/drivi
 
 No build step, no dependencies, no package manager. Open `index.html` directly in a browser (`file://` works) or serve with any static host. There are no tests, no lint commands, and no compile step.
 
+**CI pipeline (on push to `main`):** stamps `__VERSION__` placeholder with `v1.{commit-count} ({short-hash})`, minifies `index.html` with `html-minifier-terser` (~27% size reduction), then deploys via FTPS. The source file in git is never minified; minification only happens during deployment.
+
 ## Hard constraints
 
 - **No framework.** Vanilla JS (ES5-compatible), plain HTML, plain CSS only.
