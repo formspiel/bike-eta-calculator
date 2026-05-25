@@ -19,6 +19,9 @@ jobs:
           VERSION="v1.$(git rev-list --count HEAD) ($(git rev-parse --short HEAD))"
           sed -i "s/__VERSION__/$VERSION/" index.html
 
+      - name: Minify
+        run: npx html-minifier-terser --collapse-whitespace --remove-comments --minify-css true --minify-js true index.html -o index.html
+
       - name: Disable IPv6
         run: |
           sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
