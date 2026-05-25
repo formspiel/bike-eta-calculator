@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Minify and FTP Deploy
+    name: Minify and Deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -24,27 +24,18 @@ jobs:
       - name: Minify
         run: npx html-minifier-terser --collapse-whitespace --remove-comments --minify-css true --minify-js true index.html -o index.html
 
-      - name: Disable IPv6
+      - name: Deploy via FTPS
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_PORT: ${{ secrets.FTP_PORT }}
         run: |
-          sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
-          sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
-
-      - name: Deploy to FTP server
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT }}
-          protocol: ftps
-          server-dir: /
-          local-dir: ./
-          exclude: |
-            **/.git*
-            **/.git*/**
-            .github/**
-            .claude/**
-            **/*.md
-            .gitignore
-          log-level: verbose
-          dry-run: false
+          curl --ssl-reqd --disable-epsv --silent --show-error \
+               --user "$FTP_USERNAME:$FTP_PASSWORD" \
+               --upload-file index.html \
+               "ftp://$FTP_SERVER:$FTP_PORT/index.html"
+          curl --ssl-reqd --disable-epsv --silent --show-error \
+               --user "$FTP_USERNAME:$FTP_PASSWORD" \
+               --upload-file sw.js \
+               "ftp://$FTP_SERVER:$FTP_PORT/sw.js"
