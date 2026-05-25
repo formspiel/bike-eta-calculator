@@ -1,6 +1,6 @@
 # ETA Calculator
 
-A mobile-first web app for calculating estimated arrival time on a bike ride. Enter your current average speed and remaining distance — the app shows your ETA, a comparison table across nearby speeds, and a ready-to-send message you can share directly from your phone.
+A mobile-first web app for calculating estimated arrival time on a bike ride. Enter the average speed from your bike computer and how far you still have to go — the app shows your ETA, a comparison table across nearby speeds, and a shareable message you can send to let people know when you'll arrive. Works reliably even with a poor signal, and fully offline once loaded.
 
 ## Features
 
@@ -13,9 +13,9 @@ A mobile-first web app for calculating estimated arrival time on a bike ride. En
 - Settings card to adjust the climbing penalty (default: 9 min per 100 m), saved between sessions
 - German and English UI, auto-detected from browser/OS language, switchable manually; comma or period as decimal separator
 - Dark and light mode, follows OS setting
-- Responds to the OS text size setting (Dynamic Type on iOS, browser font size on Android)
-- Fully accessible (WCAG 2.2 AA)
-- Works offline after first load, reliably — a service worker caches the app so it loads even after force-quitting in flight mode
+- Text size follows your device's text size preference — increase it in iOS Settings → Accessibility → Larger Text, or Android Settings → Display → Font size. Note: the iOS Control Centre text size shortcut does not apply to web apps.
+- Designed for accessibility, targeting WCAG 2.2 AA
+- Works reliably even offline — a service worker caches the app so it loads even after force-quitting in flight mode
 
 ## Usage
 
