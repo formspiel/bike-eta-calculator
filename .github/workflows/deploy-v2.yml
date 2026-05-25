@@ -1,0 +1,41 @@
+name: Deploy v2 experiment
+
+on:
+  push:
+    branches:
+      - experiment/swipe-input
+
+jobs:
+  deploy:
+    name: Deploy v2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Stamp version
+        run: |
+          VERSION="v2.$(git rev-list --count HEAD) ($(git rev-parse --short HEAD))"
+          sed -i "s/__VERSION__/$VERSION/" index.html
+
+      - name: Minify
+        run: npx html-minifier-terser --collapse-whitespace --remove-comments --minify-css true --minify-js true index.html -o index.html
+
+      - name: Deploy via FTPS
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_PORT: ${{ secrets.FTP_PORT }}
+        run: |
+          curl --ssl-reqd --disable-epsv --silent --show-error --ftp-create-dirs \
+               --user "$FTP_USERNAME:$FTP_PASSWORD" \
+               --upload-file index.html \
+               "ftp://$FTP_SERVER:$FTP_PORT/v2/index.html"
+          curl --ssl-reqd --disable-epsv --silent --show-error --ftp-create-dirs \
+               --user "$FTP_USERNAME:$FTP_PASSWORD" \
+               --upload-file sw.js \
+               "ftp://$FTP_SERVER:$FTP_PORT/v2/sw.js"
