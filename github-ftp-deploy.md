@@ -75,7 +75,7 @@ substituting `BRANCH` with the branch chosen in Step 1 and the `exclude` block
 with the list agreed in Step 2:
 
 ```yaml
-name: Deploy via FTP
+name: Minify and Deploy via FTP
 
 on:
   push:
@@ -84,12 +84,15 @@ on:
 
 jobs:
   deploy:
-    name: FTP Deploy
+    name: Minify and FTP Deploy
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Minify
+        run: npx html-minifier-terser --collapse-whitespace --remove-comments --minify-css true --minify-js true index.html -o index.html
 
       - name: Disable IPv6
         run: |
@@ -183,3 +186,12 @@ After pushing, monitor the Actions tab. Common errors and their fixes:
    Only update the version if the user explicitly asks to upgrade.
 
 4. **Never hardcode credentials**. Always use `${{ secrets.* }}`.
+
+5. **Minify before deploy** (HTML sites).
+   Add the Minify step before Disable IPv6. Uses `html-minifier-terser` via `npx` — no install needed.
+   Reduces file size ~25–30% and strips comments from the public source.
+   Step order: Checkout → (Stamp version) → Minify → Disable IPv6 → Deploy.
+   ```yaml
+   - name: Minify
+     run: npx html-minifier-terser --collapse-whitespace --remove-comments --minify-css true --minify-js true index.html -o index.html
+   ```
