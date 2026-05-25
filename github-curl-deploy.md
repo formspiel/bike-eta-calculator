@@ -183,6 +183,19 @@ After pushing, monitor the Actions tab. Common errors and their fixes:
    If a new file needs to be deployed, add a curl line for it.
    This is a feature, not a limitation — you always know exactly what is on the server.
 
+6. **Use `--ftp-create-dirs` for subdirectory deployments**.
+   When deploying to a path that may not exist yet (e.g. `/v2/index.html` for a staging
+   environment), add `--ftp-create-dirs` to let curl create the directory automatically.
+   Without it, the upload fails if the directory is missing.
+   ```bash
+   curl --ssl-reqd --disable-epsv --silent --show-error --ftp-create-dirs \
+        --user "$FTP_USERNAME:$FTP_PASSWORD" \
+        --upload-file index.html \
+        "ftp://$FTP_SERVER:$FTP_PORT/v2/index.html"
+   ```
+   This is the basis for a simple staging/preview setup: a second workflow on a feature
+   branch deploys to `/v2/` (or any subdirectory), leaving the production root untouched.
+
 ---
 
 ## When to use the FTP Deploy Action instead
