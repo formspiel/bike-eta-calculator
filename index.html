@@ -127,14 +127,13 @@
   }
   input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  /* Consistent "legend on top" for all cards */
   .card {
     position: relative;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 0.75rem 1rem 0.875rem;
-    margin-top: 0.5rem; /* room for the floating label */
+    margin-top: 0.5rem;
   }
   .card-label {
     position: absolute;
@@ -159,7 +158,6 @@
     margin-top: 0.25rem;
   }
 
-  /* Table inside card: remove top padding, let label breathe */
   .card table { margin-top: 0.25rem; }
 
   table { width: 100%; border-collapse: collapse; font-size: var(--fs-label); font-variant-numeric: tabular-nums; }
@@ -217,9 +215,7 @@
   .btn-primary:active { opacity: 0.8; }
 
   .empty { font-size: var(--fs-body); color: var(--text-sec); }
-  /* emoji stays upright, only the text is italic */
   .empty .empty-text { font-style: italic; }
-  /* empty cell inside table must not inherit td:last-child alignment */
   td.empty { text-align: left; color: var(--text-sec); padding-left: 1rem; }
 
   .settings-note {
@@ -255,6 +251,11 @@
       <label for="asc" data-i18n="ascent">Ascent to go</label>
       <input type="text" id="asc" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" placeholder="0" autocomplete="off" autocorrect="off" spellcheck="false">
       <span class="unit" aria-hidden="true">m</span>
+    </div>
+    <div class="field">
+      <label for="stop" data-i18n="stopTime">Planned stop</label>
+      <input type="text" id="stop" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" placeholder="0" autocomplete="off" autocorrect="off" spellcheck="false">
+      <span class="unit" aria-hidden="true">min</span>
     </div>
   </fieldset>
 
@@ -309,40 +310,50 @@
   var S = {
     en: {
       title: 'ETA Calculator', journey: 'Journey', speed: 'Avg speed',
-      distance: 'Distance left', ascent: 'Ascent to go',
+      distance: 'Distance left', ascent: 'Ascent to go', stopTime: 'Planned stop',
       eta: 'ETA', etaBySpeed: 'ETA by speed',
       thSpeed: 'Speed (km/h)', thEta: 'ETA', thDur: 'Travel time', thUse: 'Use',
       empty: 'ℹ︎ <span class="empty-text">Enter speed &amp; distance above</span>',
-      smsLabel: 'Text message summary', smsEmpty: 'ℹ︎ <span class="empty-text">Enter speed &amp; distance to generate.</span>',
+      smsLabel: 'Text message summary',
+      smsEmpty: 'ℹ︎ <span class="empty-text">Enter speed &amp; distance to generate.</span>',
       copy: 'Copy', copied: 'Copied!', useRow: 'Use', share: 'Share',
       settingsLabel: 'Settings', penaltyLabel: 'Min per 100 m',
       penaltyNote: 'Added to ETA for every 100 m of ascent. Default: 9 min.',
       clockLabel: 'Current time', etaLabel: 'ETA', tableLabel: 'ETA by speed',
       smsRegionLabel: 'Text message summary', settingsRegionLabel: 'Settings',
       langSwitch: 'Zu Deutsch wechseln', settingsSwitch: 'Settings',
-      summary: function (spd, km, asc, t, now) {
-        var base = 'Based on my current average speed of ' + spd + ' km/h and ' + km + ' km remaining';
-        if (asc !== null) base += ' (' + asc + ' m ascent)';
-        return base + ', I will probably arrive at ' + t + ' (as of ' + now + ').';
+      summary: function (spd, km, asc, stop, t, now) {
+        var base = 'Based on my current average speed of ' + spd + ' km/h and ' + km + ' km remaining';
+        var notes = [];
+        if (asc  !== null) notes.push(asc  + ' m ascent');
+        if (stop !== null) notes.push(stop + ' min stop');
+        if (notes.length) base += ' (' + notes.join(', ') + ')';
+        return base + ', I will probably arrive at ' + t + ' (as of ' + now + ').';
       }
     },
     de: {
       title: 'Ankunftszeit', journey: 'Fahrt', speed: 'Ø Geschw.',
-      distance: 'Verbleibende km', ascent: 'Anstieg',
+      distance: 'Verbleibende km', ascent: 'Anstieg', stopTime: 'Geplanter Stopp',
       eta: 'Ankunft', etaBySpeed: 'Ankunft nach Tempo',
       thSpeed: 'Tempo (km/h)', thEta: 'Ankunft', thDur: 'Fahrzeit', thUse: 'Verwenden',
       empty: 'ℹ︎ <span class="empty-text">Tempo und Distanz eingeben</span>',
-      smsLabel: 'SMS-Zusammenfassung', smsEmpty: 'ℹ︎ <span class="empty-text">Tempo und Distanz eingeben.</span>',
+      smsLabel: 'SMS-Zusammenfassung',
+      smsEmpty: 'ℹ︎ <span class="empty-text">Tempo und Distanz eingeben.</span>',
       copy: 'Kopieren', copied: 'Kopiert!', useRow: 'Übern.', share: 'Teilen',
       settingsLabel: 'Einstellungen', penaltyLabel: 'Min pro 100 m',
       penaltyNote: 'Wird pro 100 m Anstieg zur Ankunftszeit addiert. Standard: 9 Min.',
       clockLabel: 'Aktuelle Uhrzeit', etaLabel: 'Ankunftszeit', tableLabel: 'Ankunft nach Tempo',
       smsRegionLabel: 'SMS-Zusammenfassung', settingsRegionLabel: 'Einstellungen',
       langSwitch: 'Switch to English', settingsSwitch: 'Einstellungen',
-      summary: function (spd, km, asc, t, now) {
-        var base = 'Bei meiner aktuellen Durchschnittsgeschwindigkeit von ' + spd + ' km/h und noch ' + km + ' km';
-        if (asc !== null) base += ' (' + asc + ' m Anstieg)';
-        return base + ' werde ich voraussichtlich um ' + t + ' Uhr ankommen (berechnet ' + now + ' Uhr).';
+      summary: function (spd, km, asc, stop, t, now) {
+        var base = 'Bei meiner aktuellen Durchschnittsgeschwindigkeit von ' + spd +
+                   ' km/h und noch ' + km + ' km';
+        var notes = [];
+        if (asc  !== null) notes.push(asc  + ' m Anstieg');
+        if (stop !== null) notes.push(stop + ' min Stopp');
+        if (notes.length) base += ' (' + notes.join(', ') + ')';
+        return base + ' werde ich voraussichtlich um ' + t +
+               ' Uhr ankommen (berechnet ' + now + ' Uhr).';
       }
     }
   };
@@ -387,13 +398,13 @@
   setInterval(tick, 1000);
 
   // ── Settings / penalty ─────────────────────────────────
-  var STORAGE_KEY    = 'eta_penalty';
+  var STORAGE_KEY     = 'eta_penalty';
   var DEFAULT_PENALTY = 9;
-  var penaltyMin     = DEFAULT_PENALTY;
+  var penaltyMin      = DEFAULT_PENALTY;
 
-  var penaltyEl     = document.getElementById('penalty');
-  var settingsBtn   = document.getElementById('settings-btn');
-  var settingsCard  = document.getElementById('settings-card');
+  var penaltyEl    = document.getElementById('penalty');
+  var settingsBtn  = document.getElementById('settings-btn');
+  var settingsCard = document.getElementById('settings-card');
 
   try {
     var stored = localStorage.getItem(STORAGE_KEY);
@@ -407,6 +418,7 @@
     var open = settingsCard.style.display !== 'none';
     settingsCard.style.display = open ? 'none' : 'block';
     settingsBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
+    if (!open) { settingsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
   });
 
   penaltyEl.addEventListener('input', function () {
@@ -425,6 +437,7 @@
   var speedEl  = document.getElementById('speed');
   var kmEl     = document.getElementById('km');
   var ascEl    = document.getElementById('asc');
+  var stopEl   = document.getElementById('stop');
   var etaEl    = document.getElementById('eta-display');
   var tableEl  = document.getElementById('eta-table');
   var summEl   = document.getElementById('summary-text');
@@ -435,12 +448,13 @@
 
   function dur(hours) {
     var m = Math.round(hours * 60), h = Math.floor(m / 60);
-    return h ? h + 'h ' + pad(m % 60) + 'm' : m + ' min';
+    return h ? h + 'h ' + pad(m % 60) + 'm' : m + ' min';
   }
 
-  function setSummary(spd, km, asc, arr) {
-    var ascStr = asc > 0 ? String(Math.round(asc)) : null;
-    summEl.textContent     = s('summary')(spd.toFixed(1), km.toFixed(1), ascStr, fmts(arr), fmts(new Date()));
+  function setSummary(spd, km, asc, stop, arr) {
+    var ascStr  = asc  > 0 ? String(Math.round(asc))  : null;
+    var stopStr = stop > 0 ? String(Math.round(stop)) : null;
+    summEl.textContent     = s('summary')(spd.toFixed(1), km.toFixed(1), ascStr, stopStr, fmts(arr), fmts(new Date()));
     summEl.className       = '';
     shareBtn.style.display = canShare ? 'inline-block' : 'none';
     shareBtn.textContent   = s('share');
@@ -449,11 +463,14 @@
   }
 
   function update() {
-    var spd = parseVal(speedEl);
-    var km  = parseVal(kmEl);
-    var asc = parseVal(ascEl);
-    var hasAsc     = !isNaN(asc) && asc > 0;
-    var extraHours = hasAsc ? (asc / 100) * penaltyMin / 60 : 0;
+    var spd  = parseVal(speedEl);
+    var km   = parseVal(kmEl);
+    var asc  = parseVal(ascEl);
+    var stop = parseVal(stopEl);
+    var hasAsc  = !isNaN(asc)  && asc  > 0;
+    var hasStop = !isNaN(stop) && stop > 0;
+    var extraHours = (hasAsc  ? (asc / 100) * penaltyMin / 60 : 0) +
+                     (hasStop ? stop / 60 : 0);
 
     if (!spd || !km || spd <= 0 || km <= 0) {
       etaEl.textContent      = '–';
@@ -485,7 +502,7 @@
     }
     tableEl.innerHTML = rows;
 
-    setSummary(spd, km, hasAsc ? asc : 0, arr);
+    setSummary(spd, km, hasAsc ? asc : 0, hasStop ? stop : 0, arr);
   }
 
   tableEl.addEventListener('click', function (e) {
@@ -502,6 +519,7 @@
   speedEl.addEventListener('input', update);
   kmEl.addEventListener('input', update);
   ascEl.addEventListener('input', update);
+  stopEl.addEventListener('input', update);
 
   // ── Share / Copy ───────────────────────────────────────
   shareBtn.addEventListener('click', function () {
